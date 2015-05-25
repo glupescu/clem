@@ -25,10 +25,11 @@ int main(int argc, char **argv)
 	cl_device_id device_id = NULL;
 	cl_program program = NULL;
 	cl_context context = NULL;
+	cl_command_queue queue = NULL;
 	cl_int ret;
 	
 	if(argc != (NUM_ARGS + 1))
-		clem_printf("./fslcl_compiler input.cl output.h");
+		clem_printf("./fslcl_compiler input.cl output.h\n");
 	
 	/* Load kernel source code */
 	fp = fopen(argv[1], "r");
@@ -38,17 +39,15 @@ int main(int argc, char **argv)
 	}
 	
 	source_str = (char *)malloc(MAX_SOURCE_SIZE);
-	
 	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
 	fclose(fp);
 	
-	/* Create Kernel program from the read in source */
-	program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &ret);
-	CHECK(ret);	
-
-	/* Build Kernel Program */
-	ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
-	CHECK(ret);
+	/* Show OpenCL source code */
+	clem_printf("Will compile OpenCL source code...\n");
+	clem_printf("%s", source_str);
+	
+	/* Init OpenCL environment */ 
+	clem_init(&context, &queue, &program, (const char*)source_str, NULL);
 
 	ret = clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binary_size, NULL);
 	CHECK(ret);
@@ -71,9 +70,12 @@ int main(int argc, char **argv)
 		fprintf(fp, "0x%02x, ", binary_str[i]);
 	fprintf(fp, "0x00};");
 	fprintf(fp, "\n /* END OpenCL precompiled kernel */");
-    	fclose(fp);
+    fclose(fp);
 	
 	clem_printf("Binary kernel written to %s\n\n", argv[2]);
+	
+	/* Destroy OpenCL environment */
+	clem_finit(&context, &queue, &program);
 
 	return 0;
 }

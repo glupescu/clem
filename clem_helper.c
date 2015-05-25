@@ -18,7 +18,7 @@ void clem_printf(const char *format, ...)
 /*******************************************************
 *	Error codes
 *******************************************************/
-const char* CL_ERRSTRING(cl_int err) {
+const char* CLEM_ERRSTRING(cl_int err) {
 switch (err) {
 	case CL_SUCCESS:                     	return  "Success!";
 	case CL_DEVICE_NOT_FOUND:               return  "Device not found.";
@@ -73,7 +73,7 @@ switch (err) {
 /*******************************************************
 *	Error log
 *******************************************************/
-void CL_ERRLOG(cl_program program, cl_device_id device)
+void CLEM_ERRLOG(cl_program program, cl_device_id device)
 {
 	char* build_log;
 	size_t log_size;
@@ -97,7 +97,7 @@ int CHECK(int cuerr){
 
 	if(cuerr != CL_SUCCESS)
 	{
-		clem_printf("\n%s\n", CL_ERRSTRING(cuerr));
+		clem_printf("\n%s\n", CLEM_ERRSTRING(cuerr));
 		return 1;
 	}
 	return 0;
@@ -110,9 +110,92 @@ int CHECK_COMPILE(int cuerr, cl_program program, cl_device_id device){
 
 	if(cuerr != CL_SUCCESS)
 	{
-		clem_printf("\n%s\n", CL_ERRSTRING(cuerr));
-		CL_ERRLOG(program, device);
+		clem_printf("\n%s\n", CLEM_ERRSTRING(cuerr));
+		CLEM_ERRLOG(program, device);
 		return 1;
      	}
 	return 0;
 }
+
+/*******************************************************
+*       Init OpenCL Environment
+*******************************************************/
+int clem_init(cl_context *ptr_context, 
+			cl_command_queue *ptr_queue,
+			cl_program *ptr_program,
+			const char *ptr_source,
+			const char *ptr_binary)
+{
+	cl_int ret;
+	char buffer[128];
+	cl_platform_id cpPlatform;
+	cl_device_id device_id;
+	
+	size_t source_size;
+	size_t binary_size;
+	
+	CHECK(clGetPlatformIDs(1, &cpPlatform, NULL));
+	CHECK(clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 
+		1, &device_id, NULL));
+		
+	CHECK(clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(buffer), buffer, NULL));
+	clem_printf("\nVendor: %s\n", buffer);
+	
+	CHECK(clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(buffer), buffer, NULL));
+	clem_printf("Device: %s\n", buffer);
+		
+	*ptr_context = clCreateContext(0, 1, &device_id, NULL, NULL, &ret);
+	CHECK(ret);
+	
+	*ptr_queue = clCreateCommandQueue(*ptr_context, device_id, 0, &ret);
+	CHECK(ret);
+	
+	if(ptr_source != NULL) {
+		source_size = strlen(ptr_source);
+	
+		*ptr_program = clCreateProgramWithSource(*ptr_context, 1, (const char **)&ptr_source, (const size_t *)&source_size, &ret);
+		CHECK(ret);
+		
+		ret = clBuildProgram(*ptr_program, 1, &device_id, NULL, NULL, NULL);
+		CHECK_COMPILE(ret, *ptr_program, device_id);
+	}
+	else if(ptr_binary != NULL){
+		binary_size = strlen(ptr_binary);
+		
+		*ptr_program = clCreateProgramWithBinary(*ptr_context, 1, &device_id, 
+			(const size_t *)&binary_size, 
+			(const unsigned char **)&ptr_binary, 
+			NULL, &ret);
+		CHECK(ret);
+						
+		ret = clBuildProgram(*ptr_program, 1, &device_id, NULL, NULL, NULL);
+		CHECK_COMPILE(ret, *ptr_program, device_id);
+		
+		return CL_SUCCESS;
+	}
+	else 
+		return CL_SUCCESS;
+}
+
+/*******************************************************
+*       Destroy OpenCL Environment
+*******************************************************/
+int clem_finit(cl_context *ptr_context, 
+			cl_command_queue *ptr_queue,
+			cl_program *ptr_program)
+{
+	if(ptr_program != NULL)
+		clReleaseProgram(*ptr_program);
+	
+	if(ptr_queue != NULL)
+		clReleaseCommandQueue(*ptr_queue);
+		
+	if(ptr_context != NULL)
+		clReleaseContext(*ptr_context);
+	
+	return CL_SUCCESS;
+}
+
+
+
+
