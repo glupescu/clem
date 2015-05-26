@@ -6,6 +6,7 @@
 #define ERR_KERNEL_READ -1313
 #define ERR_KERNEL_STR_ALLOC -1314
 #define KERNEL_BINARY_CFILE "ckernel.h"
+#define MAX_NUM_DEVICES 6
 
 /* ./fslcl_compiler input.cl output.h */
 #define NUM_ARGS 2
@@ -20,8 +21,8 @@ int main(int argc, char **argv)
 	FILE *fp;
 	size_t source_size;
 	char *source_str;
-	size_t binary_size;
-	unsigned char *binary_str;
+	size_t binary_sizes[MAX_NUM_DEVICES] = {0, 0, 0, 0, 0, 0};
+	unsigned char *binary_str[MAX_NUM_DEVICES];
 	cl_device_id device_id = NULL;
 	cl_program program = NULL;
 	cl_context context = NULL;
@@ -44,18 +45,23 @@ int main(int argc, char **argv)
 	
 	/* Show OpenCL source code */
 	clem_printf("Will compile OpenCL source code...\n");
+	clem_printf("-----------------------------------------\n");
 	clem_printf("%s", source_str);
+	clem_printf("-----------------------------------------\n");
 	
 	/* Init OpenCL environment */ 
-	clem_init(&context, &queue, &program, (const char*)source_str, NULL);
+	clem_init(&context, &queue, &program, (const char*)source_str, NULL, strlen(source_str));
 
-	ret = clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binary_size, NULL);
+	ret = clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), binary_sizes, NULL);
 	CHECK(ret);
 
-	clem_printf("Kernel binary size: %d\n", binary_size); 
-	binary_str = (unsigned char*) malloc(sizeof(unsigned char)* binary_size);
+	for(i=0; i<MAX_NUM_DEVICES; i++)
+		if(binary_sizes[i] > 0){
+			clem_printf("Kernel binary size: %d\n", binary_sizes[i]); 
+			binary_str[i] = (unsigned char*) malloc(sizeof(unsigned char)* binary_sizes[i]);
+		}
 
-	ret = clGetProgramInfo(program, CL_PROGRAM_BINARIES, sizeof(unsigned char*), &binary_str, NULL);
+	ret = clGetProgramInfo(program, CL_PROGRAM_BINARIES, sizeof(unsigned char*), binary_str, NULL);
 	CHECK(ret);
 
 	fp = fopen(argv[2], "w");
@@ -63,11 +69,12 @@ int main(int argc, char **argv)
 		clem_printf("ERROR fopen on file '%s'\n", argv[2]);
 		return ERR_KERNEL_READ;
 	}
-
 	fprintf(fp, "\n/* OpenCL precompiled kernel */\n");
+	fprintf(fp, "#define BINARY_SIZE %zu\n", 
+		binary_sizes[0]);
 	fprintf(fp, "const unsigned char binary_program[] = {");
-	for(i=0; i < binary_size; i++)
-		fprintf(fp, "0x%02x, ", binary_str[i]);
+	for(i=0; i < binary_sizes[0]; i++)
+		fprintf(fp, "0x%02x, ", binary_str[0][i]);
 	fprintf(fp, "0x00};");
 	fprintf(fp, "\n /* END OpenCL precompiled kernel */");
     fclose(fp);

@@ -1,7 +1,7 @@
 #include "clem_helper.h"
 
 /* kernel binary program */
-#include "cl_add.h"
+#include "kernel_add.h"
 
 /*******************************************************
 *	MAIN
@@ -17,5 +17,5 @@ int main(int argc, char** argv)
 	clem_printf("Init OpenCL app\n");
 
 	/* Init OpenCL environment */ 
-	clem_init(&context, &queue, &program, NULL, (const char*)binary_program);
+	clem_init(&context, &queue, &program, NULL, binary_program, BINARY_SIZE);
 }

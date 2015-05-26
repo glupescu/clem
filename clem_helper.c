@@ -124,7 +124,8 @@ int clem_init(cl_context *ptr_context,
 			cl_command_queue *ptr_queue,
 			cl_program *ptr_program,
 			const char *ptr_source,
-			const char *ptr_binary)
+			const char *ptr_binary,
+			size_t str_size)
 {
 	cl_int ret;
 	char buffer[128];
@@ -132,14 +133,14 @@ int clem_init(cl_context *ptr_context,
 	cl_device_id device_id;
 	
 	size_t source_size;
-	size_t binary_size;
+	size_t binary_sizes[2] = {0, 0};
 	
 	CHECK(clGetPlatformIDs(1, &cpPlatform, NULL));
 	CHECK(clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 
 		1, &device_id, NULL));
 		
 	CHECK(clGetDeviceInfo(device_id, CL_DEVICE_VENDOR, sizeof(buffer), buffer, NULL));
-	clem_printf("\nVendor: %s\n", buffer);
+	clem_printf("Vendor: %s\n", buffer);
 	
 	CHECK(clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(buffer), buffer, NULL));
 	clem_printf("Device: %s\n", buffer);
@@ -151,7 +152,8 @@ int clem_init(cl_context *ptr_context,
 	CHECK(ret);
 	
 	if(ptr_source != NULL) {
-		source_size = strlen(ptr_source);
+		source_size = str_size;
+		clem_printf("Kernel source size: %zub\n", source_size);
 	
 		*ptr_program = clCreateProgramWithSource(*ptr_context, 1, (const char **)&ptr_source, (const size_t *)&source_size, &ret);
 		CHECK(ret);
@@ -160,21 +162,23 @@ int clem_init(cl_context *ptr_context,
 		CHECK_COMPILE(ret, *ptr_program, device_id);
 	}
 	else if(ptr_binary != NULL){
-		binary_size = strlen(ptr_binary);
+		binary_sizes[0] = str_size;
+		clem_printf("Kernel binary size: %zub\n", binary_sizes[0]);
 		
 		*ptr_program = clCreateProgramWithBinary(*ptr_context, 1, &device_id, 
-			(const size_t *)&binary_size, 
+			(const size_t *)binary_sizes, 
 			(const unsigned char **)&ptr_binary, 
 			NULL, &ret);
-		CHECK(ret);
+		CHECK(ret); 
 						
 		ret = clBuildProgram(*ptr_program, 1, &device_id, NULL, NULL, NULL);
 		CHECK_COMPILE(ret, *ptr_program, device_id);
 		
 		return CL_SUCCESS;
 	}
-	else 
+	else {
 		return CL_SUCCESS;
+		}
 }
 
 /*******************************************************
