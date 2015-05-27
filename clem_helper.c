@@ -1,19 +1,86 @@
 #include "clem_helper.h"
 
 /*******************************************************
-*       STDOUT function
+*	I/O function
 *******************************************************/
 void clem_printf(const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
 		
-	/* platform specific printf code */ 
+	/* platform specific printf code */
+#ifdef CLEM_OS_LINUX	
 	vprintf(format, args);
+#else
+
+#endif
 	
 	va_end(args);
 }
 
+/*******************************************************
+*	Memory allocation function
+*******************************************************/
+void* clem_malloc(size_t size)
+{
+#ifdef CLEM_OS_LINUX	
+	return malloc(size);
+#else
+	return NULL;
+#endif
+}
+
+void clem_free(void* ptr)
+{
+#ifdef CLEM_OS_LINUX	
+	free(ptr);
+#else
+
+#endif
+}
+
+/*******************************************************
+*	Timer Functions
+*******************************************************/
+#ifdef CLEM_OS_LINUX
+
+#define NUM_CLOCK 16
+clock_t start_t[NUM_CLOCK];
+clock_t end_t[NUM_CLOCK];
+#else
+
+#endif
+
+void clem_timer_start(int id)
+{
+#ifdef CLEM_OS_LINUX
+	if(id > NUM_CLOCK){
+		clem_printf("Error id clock timer\n");
+		return;
+	}
+	else
+		start_t[id] = clock();
+#else
+
+#endif
+}
+
+void clem_timer_stop(int id, const char* msg)
+{
+#ifdef CLEM_OS_LINUX
+	if(id > NUM_CLOCK){
+		clem_printf("Error id clock timer\n");
+		return;
+	}
+	else {
+		end_t[id] = clock();
+		clem_printf("%s: %f\n", msg,
+			(double)(end_t[id] - start_t[id]) / CLOCKS_PER_SEC);
+	}
+#else
+
+#endif
+}
 
 /*******************************************************
 *	Error codes

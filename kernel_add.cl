@@ -1,5 +1,7 @@
-__kernel void kernel_add(__global int* a)
+__kernel void kernel_add(__global float* a)
 {
 	int gid = get_global_id(0);
-	a[gid] = gid;
+	float angle = gid;
+	a[gid] = sin(angle) * sin(angle) + 
+		cos(angle + 1.0) * cos(angle + 1.0);
 }
