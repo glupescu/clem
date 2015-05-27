@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 	/* Transfer result from the memory buffer */
 	CHECK(clEnqueueReadBuffer(queue, d_vecA, CL_TRUE, 0, VECTOR_SIZE * sizeof(float), h_vecA, 0, NULL, NULL));
 	
-	/* Start timer */
+	/* Stop timer */
 	clem_timer_stop(0, "Execution time");
 	
 	for(i=0; i<VECTOR_SIZE; i++)

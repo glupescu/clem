@@ -249,7 +249,20 @@ int clem_init(cl_context *ptr_context,
 }
 
 /*******************************************************
-*       Destroy OpenCL Environment
+*	Init OpenCL Safety
+*******************************************************/
+int clem_init_safety(cl_context *ptr_context, 
+			cl_command_queue *ptr_queue,
+			cl_program *ptr_program,
+			const char *ptr_source,
+			const char *ptr_binary,
+			size_t str_size)
+{
+	
+}
+
+/*******************************************************
+*	Destroy OpenCL Environment
 *******************************************************/
 int clem_finit(cl_context *ptr_context, 
 			cl_command_queue *ptr_queue,
