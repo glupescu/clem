@@ -14,8 +14,6 @@
 #define CLEM_OS_LINUX	1
 //#define CLEM_OS_AUTOSAR 2
 
-
-
 /************************************
 * List of helper functions
 ************************************/
@@ -28,13 +26,13 @@ int CHECK_COMPILE(int cuerr, cl_program program, cl_device_id device);
 
 /* wrapper/helper functions */
 void clem_printf(const char *format, ...);
-int clem_init(cl_context *ptr_context, 
+int clemSafety_init(cl_context *ptr_context, 
 			cl_command_queue *ptr_queue,
 			cl_program *ptr_program,
 			const char *ptr_source,
 			const char *ptr_binary,
 			size_t str_size);
-int clem_finit(cl_context *ptr_context, 
+int clemSafety_finit(cl_context *ptr_context, 
 			cl_command_queue *ptr_queue,
 			cl_program *ptr_program);
 			

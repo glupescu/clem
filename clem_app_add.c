@@ -1,7 +1,8 @@
 #include "clem_helper.h"
 
-/* kernel binary program */
-#include "kernel_add.h"
+char kernel_source[] = "__kernel void kernel_add(__global float* a){" \
+	"int gid = get_global_id(0); float angle = gid;" \
+	"a[gid] = sin(angle) * sin(angle) + cos(angle + 1.0) * cos(angle + 1.0);}";
 
 #define VECTOR_SIZE 2048
 
@@ -25,7 +26,7 @@ int main(int argc, char** argv)
 	clem_printf("Init OpenCL app\n");
 
 	/* Init OpenCL environment */ 
-	clem_init(&context, &queue, &program, NULL, binary_program, BINARY_SIZE);
+	clemSafety_init(&context, &queue, &program, kernel_source, NULL, strlen(kernel_source));
 	
 	/* Buffer device and host */
 	h_vecA = (float*)clem_malloc(VECTOR_SIZE * sizeof(float));
@@ -60,5 +61,5 @@ int main(int argc, char** argv)
 	CHECK(clFlush(queue));
 	
 	/* Resource free */
-	clem_finit(&context, &queue, &program);
+	clemSafety_finit(&context, &queue, &program);
 }

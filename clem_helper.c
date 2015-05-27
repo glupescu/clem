@@ -187,7 +187,7 @@ int CHECK_COMPILE(int cuerr, cl_program program, cl_device_id device){
 /*******************************************************
 *       Init OpenCL Environment
 *******************************************************/
-int clem_init(cl_context *ptr_context, 
+int clemSafety_init(cl_context *ptr_context, 
 			cl_command_queue *ptr_queue,
 			cl_program *ptr_program,
 			const char *ptr_source,
@@ -248,23 +248,35 @@ int clem_init(cl_context *ptr_context,
 		}
 }
 
-/*******************************************************
-*	Init OpenCL Safety
-*******************************************************/
-int clem_init_safety(cl_context *ptr_context, 
-			cl_command_queue *ptr_queue,
-			cl_program *ptr_program,
-			const char *ptr_source,
-			const char *ptr_binary,
-			size_t str_size)
+int clemSafety_clCreateBuffer(void)
 {
-	
+	return 0;
+}
+
+int clemSafety_clCreateKernel(void)
+{
+	return 0;
+}
+
+int clemSafety_clEnqueueNDRangeKernel(void)
+{
+	return 0;
+}
+
+int clemSafety_clEnqueueReadBuffer(void)
+{
+	return 0;
+}
+
+int clemSafety_clFlush(void)
+{
+	return 0;
 }
 
 /*******************************************************
 *	Destroy OpenCL Environment
 *******************************************************/
-int clem_finit(cl_context *ptr_context, 
+int clemSafety_finit(cl_context *ptr_context, 
 			cl_command_queue *ptr_queue,
 			cl_program *ptr_program)
 {
